@@ -31,8 +31,13 @@ router.get('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         res.json(result.recordset.map(row => {
             const r = {};
             for (let k in row) {
-                if (k !== 'Settings')
-                    r[k.charAt(0).toLowerCase() + k.slice(1)] = row[k];
+                if (k !== 'Settings') {
+                    if (k === 'ParentCompanyId') {
+                        r.parentSiteId = row[k];
+                    } else {
+                        r[k.charAt(0).toLowerCase() + k.slice(1)] = row[k];
+                    }
+                }
             }
             if (row.Settings && typeof row.Settings === 'string') {
                 try {
@@ -51,7 +56,7 @@ router.get('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 // POST a new hospital
 router.post('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const _a = req.body, { id, name, code, organizationType, contactPerson, email, phone, address } = _a, extraData = __rest(_a, ["id", "name", "code", "organizationType", "contactPerson", "email", "phone", "address"]);
+        const _a = req.body, { id, name, code, organizationType, contactPerson, email, phone, address, parentSiteId } = _a, extraData = __rest(_a, ["id", "name", "code", "organizationType", "contactPerson", "email", "phone", "address", "parentSiteId"]);
         const pool = yield config_1.poolPromise;
         const result = yield pool.request()
             .input('Id', config_1.sql.NVarChar, id)
@@ -62,10 +67,11 @@ router.post('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             .input('Email', config_1.sql.NVarChar, email)
             .input('Phone', config_1.sql.NVarChar, phone)
             .input('Address', config_1.sql.NVarChar, address || null)
+            .input('ParentCompanyId', config_1.sql.NVarChar, parentSiteId || null)
             .input('Settings', config_1.sql.NVarChar, JSON.stringify(extraData))
             .query(`
-                INSERT INTO Hospital (Id, Name, Code, OrganizationType, ContactPerson, Email, Phone, Address, Settings)
-                VALUES (@Id, @Name, @Code, @OrganizationType, @ContactPerson, @Email, @Phone, @Address, @Settings)
+                INSERT INTO Hospital (Id, Name, Code, OrganizationType, ContactPerson, Email, Phone, Address, ParentCompanyId, Settings)
+                VALUES (@Id, @Name, @Code, @OrganizationType, @ContactPerson, @Email, @Phone, @Address, @ParentCompanyId, @Settings)
             `);
         res.status(201).json({ message: 'Hospital created successfully' });
     }
@@ -77,7 +83,7 @@ router.post('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 router.put('/:id', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
-        const _a = req.body, { name, code, organizationType, contactPerson, email, phone, address } = _a, extraData = __rest(_a, ["name", "code", "organizationType", "contactPerson", "email", "phone", "address"]);
+        const _a = req.body, { name, code, organizationType, contactPerson, email, phone, address, parentSiteId } = _a, extraData = __rest(_a, ["name", "code", "organizationType", "contactPerson", "email", "phone", "address", "parentSiteId"]);
         const pool = yield config_1.poolPromise;
         yield pool.request()
             .input('Id', config_1.sql.NVarChar, id)
@@ -88,11 +94,12 @@ router.put('/:id', (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             .input('Email', config_1.sql.NVarChar, email)
             .input('Phone', config_1.sql.NVarChar, phone)
             .input('Address', config_1.sql.NVarChar, address || null)
+            .input('ParentCompanyId', config_1.sql.NVarChar, parentSiteId || null)
             .input('Settings', config_1.sql.NVarChar, JSON.stringify(extraData))
             .query(`
                 UPDATE Hospital SET 
                 Name=@Name, Code=@Code, OrganizationType=@OrganizationType, ContactPerson=@ContactPerson,
-                Email=@Email, Phone=@Phone, Address=@Address, Settings=@Settings
+                Email=@Email, Phone=@Phone, Address=@Address, ParentCompanyId, Settings=@Settings
                 WHERE Id=@Id
             `);
         res.json({ message: 'Hospital updated successfully' });
