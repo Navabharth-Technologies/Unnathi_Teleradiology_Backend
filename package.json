@@ -4,9 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
-    "build": "tsc",
-    "start": "node dist/server.js"
+    "dev": "nodemon src/server.js",
+    "build": "echo 'No build needed'",
+    "start": "node src/server.js"
   },
   "keywords": [],
   "author": "",
