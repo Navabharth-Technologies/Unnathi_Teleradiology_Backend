@@ -82,4 +82,32 @@ router.put('/:id', async (req: Request, res: Response) => {
     }
 });
 
+// DELETE site
+router.delete('/:id', async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const pool = await poolPromise;
+        const transaction = new sql.Transaction(pool);
+        
+        await transaction.begin();
+        try {
+            await transaction.request()
+                .input('Id', sql.NVarChar, id)
+                .query('DELETE FROM AppUser WHERE SiteId=@Id');
+
+            await transaction.request()
+                .input('Id', sql.NVarChar, id)
+                .query('DELETE FROM TeleradiologyCompany WHERE Id=@Id');
+                
+            await transaction.commit();
+            res.json({ message: 'Site and associated users deleted successfully' });
+        } catch (err: any) {
+            await transaction.rollback();
+            throw err;
+        }
+    } catch (err: any) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 export default router;
